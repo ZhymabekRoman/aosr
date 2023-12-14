@@ -181,7 +181,7 @@ export class SingleLineParser implements PatternParser {
 
 export class MultiLineParser implements PatternParser {
 	Parse(card: Card): Pattern[] {
-		let reg = /^((?:(?!\? ?).+\n)+)\?( #.+)?\n((?:.+\n?)+)$/gm
+		let reg = /^((?:(?!\? ?).+\n)+)\?( #.+)?\n((?:.+\n?\s?(?:\s\?)?)+)?/gm
 		// 捕获不包含? 开头的连续行 然后捕获标签 然后捕获剩余行
 		let results: Pattern[] = []
 		for (let body of card.bodyList) {

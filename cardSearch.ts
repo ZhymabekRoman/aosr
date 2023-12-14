@@ -35,7 +35,7 @@ interface elem {
 class defaultCardSearch implements cardSearcher {
 	private tagName = "Q"
 	private matchReg: RegExp
-	private qReg = /(^#Q\b.*|^#\/Q\b.*)/gm;
+	private qReg = new RegExp(`(^#${this.tagName}\\b.*|^#\\/${this.tagName}\\b.*)`, "gm");
 	constructor(tagName?: string) {
 	}
 	findAllQ(text: string) {
@@ -51,32 +51,31 @@ class defaultCardSearch implements cardSearcher {
 		return matches;
 	}
 	matchText(text: string) {
-		const qTags = this.findAllQ(text);
-		const matches: elem[] = [];
-		for (let i = 0; i < qTags.length; i++) {
-			if (qTags[i].text.startsWith('#Q')) {
-				if (matches.length > 0) {
-					if (matches[matches.length - 1].end > qTags[i].start) {
-						continue
-					}
-				}
-				let end;
-				if (i + 1 < qTags.length && qTags[i + 1].text.startsWith('#/Q')) {
-					end = qTags[i + 1].start - 1;
-				} else {
-					const nextBlankLine = text.indexOf('\n\n', qTags[i].end);
-					end = nextBlankLine !== -1 ? nextBlankLine : text.length;
-				}
-				const all = text.slice(qTags[i].start, end)
-				const content = text.slice(qTags[i].end + 1, end)
-				if (all.length == 0 || content.length == 0) {
+	const qTags = this.findAllQ(text);
+	const matches: elem[] = [];
+	for (let i = 0; i < qTags.length; i++) {
+		if (qTags[i].text.startsWith('#' + this.tagName)) {
+			if (matches.length > 0) {
+				if (matches[matches.length - 1].end > qTags[i].start) {
 					continue
 				}
-				matches.push({ all: all, start: qTags[i].start, end: end, content: content, heading: qTags[i].text });
 			}
+			let end;
+			if (i + 1 < qTags.length) {
+				end = qTags[i + 1].start - 1;
+			} else {
+				end = text.length;
+			}
+			const all = text.slice(qTags[i].start, end)
+			const content = text.slice(qTags[i].end + 1, end)
+			if (all.length == 0 || content.length == 0) {
+				continue
+			}
+			matches.push({ all: all, start: qTags[i].start, end: end, content: content, heading: qTags[i].text });
 		}
-		return matches;
 	}
+	return matches;
+}
 
 	async search(file?: TFile, text?: string): Promise<SearchResult> {
 		let result = new SearchResult()
